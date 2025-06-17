@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Демо: 3D-координатна система</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <script>
     AFRAME.registerComponent("vector-demo", {
       init: function () {
@@ -18,13 +17,16 @@
         ];
 
         axes.forEach((axis) => {
-          const arrow = document.createElement("a-entity");
-          arrow.setAttribute("line", {
-            start: "0 0 0",
-            end: axis.dir.join(" "),
-            color: axis.color,
+          const line = document.createElement("a-entity");
+          line.setAttribute("geometry", {
+            primitive: "cylinder",
+            radius: 0.01,
+            height: Math.sqrt(axis.dir[0]**2 + axis.dir[1]**2 + axis.dir[2]**2),
           });
-          sceneEl.appendChild(arrow);
+          line.setAttribute("material", "color", axis.color);
+          line.setAttribute("position", `${axis.dir[0]/2} ${axis.dir[1]/2} ${axis.dir[2]/2}`);
+          line.setAttribute("rotation", `${Math.atan2(axis.dir[1], axis.dir[2]) * 180 / Math.PI} ${Math.atan2(axis.dir[0], axis.dir[2]) * 180 / Math.PI} 0`);
+          sceneEl.appendChild(line);
 
           const label = document.createElement("a-text");
           label.setAttribute("value", axis.label);
@@ -35,13 +37,13 @@
           sceneEl.appendChild(label);
         });
 
-        const A = new THREE.Vector3(1, 1, 0);
-        const B = new THREE.Vector3(0, 1, -1);
+        const A = new AFRAME.THREE.Vector3(1, 1, 0);
+        const B = new AFRAME.THREE.Vector3(0, 1, -1);
 
         this.drawVector(sceneEl, A, "orange", "A");
         this.drawVector(sceneEl, B, "purple", "B");
 
-        const sum = new THREE.Vector3().addVectors(A, B);
+        const sum = new AFRAME.THREE.Vector3().addVectors(A, B);
         this.drawVector(sceneEl, sum, "cyan", "A+B");
 
         const dot = A.dot(B);
@@ -52,18 +54,30 @@
         dotText.setAttribute("scale", "0.6 0.6 0.6");
         sceneEl.appendChild(dotText);
 
-        const cross = new THREE.Vector3().crossVectors(A, B);
+        const cross = new AFRAME.THREE.Vector3().crossVectors(A, B);
         this.drawVector(sceneEl, cross, "yellow", "A×B");
       },
 
       drawVector(scene, vec, color, name) {
-        const line = document.createElement("a-entity");
-        line.setAttribute("line", {
-          start: "0 0 0",
-          end: `${vec.x} ${vec.y} ${vec.z}`,
-          color: color,
+        const shaft = document.createElement("a-entity");
+        const length = vec.length();
+        const position = vec.clone().multiplyScalar(0.5);
+        shaft.setAttribute("geometry", {
+          primitive: "cylinder",
+          radius: 0.02,
+          height: length
         });
-        scene.appendChild(line);
+        shaft.setAttribute("material", "color", color);
+        shaft.setAttribute("position", `${position.x} ${position.y} ${position.z}`);
+
+        // Оцінка кута обертання по осі
+        const direction = new AFRAME.THREE.Vector3(vec.x, vec.y, vec.z).normalize();
+        const quaternion = new AFRAME.THREE.Quaternion();
+        quaternion.setFromUnitVectors(new AFRAME.THREE.Vector3(0, 1, 0), direction);
+        const rotation = new AFRAME.THREE.Euler().setFromQuaternion(quaternion, 'XYZ');
+        shaft.setAttribute("rotation", `${AFRAME.THREE.Math.radToDeg(rotation.x)} ${AFRAME.THREE.Math.radToDeg(rotation.y)} ${AFRAME.THREE.Math.radToDeg(rotation.z)}`);
+
+        scene.appendChild(shaft);
 
         const label = document.createElement("a-text");
         label.setAttribute("value", name);
@@ -84,4 +98,5 @@
   </a-scene>
 </body>
 </html>
+
 
