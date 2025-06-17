@@ -211,44 +211,44 @@
         <a-sphere position="0 0 0" radius="0.1" color="#ffffff" opacity="0.8"></a-sphere>
 
         <!-- Координатна сітка -->
-        <a-entity id="grid" position="0 0 0">
-            <!-- Сітка в площині XY -->
-            <a-entity position="0 0 0">
-                <!-- Горизонтальні лінії (X) -->
-                <a-entity position="0 0 0" rotation="0 0 0">
-                    <a-plane position="0 0 0" rotation="-90 0 0" width="10" height="10" color="#222244" opacity="0.3" repeat="10 10"></a-plane>
-                </a-entity>
-            </a-entity>
-        </a-entity>
+        <a-grid position="0 0 0" rotation="-90 0 0" width="10" height="10" color="#333366" opacity="0.3"></a-grid>
 
         <!-- Вектор A -->
         <a-entity id="vectorA">
-            <a-cylinder id="vectorALine" position="1.5 1 0.5" rotation="0 0 0" radius="0.03" height="3.74" color="#ff4444"></a-cylinder>
-            <a-cone id="vectorAArrow" position="3 2 1" rotation="0 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#ff4444"></a-cone>
+            <a-entity id="vectorALine" position="0 0 0" rotation="0 0 0">
+                <a-cylinder position="1.5 1 0.5" radius="0.03" height="3.74" color="#ff4444"></a-cylinder>
+                <a-cone position="3 2 1" radius-bottom="0.1" radius-top="0" height="0.3" color="#ff4444"></a-cone>
+            </a-entity>
             <a-text id="vectorALabel" value="A(3,2,1)" position="3.5 2.5 1" align="center" color="#ff4444" scale="0.8 0.8 0.8"></a-text>
         </a-entity>
 
         <!-- Вектор B -->
         <a-entity id="vectorB">
-            <a-cylinder id="vectorBLine" position="0.5 1.5 1" rotation="0 0 0" radius="0.03" height="3.74" color="#4444ff"></a-cylinder>
-            <a-cone id="vectorBArrow" position="1 3 2" rotation="0 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#4444ff"></a-cone>
+            <a-entity id="vectorBLine" position="0 0 0" rotation="0 0 0">
+                <a-cylinder position="0.5 1.5 1" radius="0.03" height="3.74" color="#4444ff"></a-cylinder>
+                <a-cone position="1 3 2" radius-bottom="0.1" radius-top="0" height="0.3" color="#4444ff"></a-cone>
+            </a-entity>
             <a-text id="vectorBLabel" value="B(1,3,2)" position="1.5 3.5 2" align="center" color="#4444ff" scale="0.8 0.8 0.8"></a-text>
         </a-entity>
 
         <!-- Результуючий вектор -->
         <a-entity id="resultVector" visible="false">
-            <a-cylinder id="resultLine" position="0 0 0" rotation="0 0 0" radius="0.04" height="1" color="#44ff44"></a-cylinder>
-            <a-cone id="resultArrow" position="0 0 0" rotation="0 0 0" radius-bottom="0.12" radius-top="0" height="0.4" color="#44ff44"></a-cone>
+            <a-entity id="resultLine" position="0 0 0" rotation="0 0 0">
+                <a-cylinder position="0 0 0" radius="0.04" height="1" color="#44ff44"></a-cylinder>
+                <a-cone position="0 0 0" radius-bottom="0.12" radius-top="0" height="0.4" color="#44ff44"></a-cone>
+            </a-entity>
             <a-text id="resultLabel" value="" position="0 0 0" align="center" color="#44ff44" scale="0.8 0.8 0.8"></a-text>
         </a-entity>
 
-        <!-- Камера -->
-        <a-entity camera look-controls wasd-controls="enabled: false" position="8 6 8">
-            <a-entity cursor="fuse: true; fuseTimeout: 500"
-                      position="0 0 -5"
-                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                      material="color: white; shader: flat">
-            </a-entity>
+        <!-- Камера з можливістю зуму -->
+        <a-entity id="cameraRig" position="0 0 0">
+            <a-camera id="camera" 
+                     position="8 6 8" 
+                     look-controls="enabled: true; pointerLockEnabled: false" 
+                     wasd-controls="enabled: false"
+                     orbit-controls="target: 0 0 0; enableDamping: true; dampingFactor: 0.25;
+                                    rotateSpeed: 0.5; zoomSpeed: 1; minDistance: 3; maxDistance: 20">
+            </a-camera>
         </a-entity>
     </a-scene>
 
@@ -294,21 +294,23 @@
             if (length === 0) return;
 
             const entity = document.getElementById(`vector${name}`);
-            const arrow = document.getElementById(`vector${name}Arrow`);
-            const line = document.getElementById(`vector${name}Line`);
+            const lineEntity = document.getElementById(`vector${name}Line`);
             const label = document.getElementById(`vector${name}Label`);
 
             // Розрахунок кута та орієнтації
             const rotation = calculateRotationForVector(vector);
             
-            // Позиція лінії (середина вектора)
+            // Оновлення позиції та обертання всієї групи
+            lineEntity.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+            
+            // Оновлення лінії вектора
+            const line = lineEntity.querySelector('a-cylinder');
             line.setAttribute('position', `${vector.x/2} ${vector.y/2} ${vector.z/2}`);
             line.setAttribute('height', length);
-            line.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
             
-            // Позиція стрілки (кінець вектора) з правильним обертанням
+            // Оновлення стрілки
+            const arrow = lineEntity.querySelector('a-cone');
             arrow.setAttribute('position', `${vector.x} ${vector.y} ${vector.z}`);
-            arrow.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
 
             // Позиція мітки
             label.setAttribute('position', `${vector.x + 0.5} ${vector.y + 0.5} ${vector.z}`);
@@ -396,8 +398,7 @@
         // Функція для відображення результуючого вектора
         function showResultVector(vector, operation) {
             const resultEntity = document.getElementById('resultVector');
-            const resultArrow = document.getElementById('resultArrow');
-            const resultLine = document.getElementById('resultLine');
+            const resultLineEntity = document.getElementById('resultLine');
             const resultLabel = document.getElementById('resultLabel');
 
             const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
@@ -411,14 +412,17 @@
             // Розрахунок правильного обертання
             const rotation = calculateRotationForVector(vector);
             
-            // Позиція лінії (середина вектора)
-            resultLine.setAttribute('position', `${vector.x/2} ${vector.y/2} ${vector.z/2}`);
-            resultLine.setAttribute('height', length);
-            resultLine.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+            // Оновлення позиції та обертання всієї групи
+            resultLineEntity.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
             
-            // Позиція стрілки (кінець вектора)
-            resultArrow.setAttribute('position', `${vector.x} ${vector.y} ${vector.z}`);
-            resultArrow.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+            // Оновлення лінії вектора
+            const line = resultLineEntity.querySelector('a-cylinder');
+            line.setAttribute('position', `${vector.x/2} ${vector.y/2} ${vector.z/2}`);
+            line.setAttribute('height', length);
+            
+            // Оновлення стрілки
+            const arrow = resultLineEntity.querySelector('a-cone');
+            arrow.setAttribute('position', `${vector.x} ${vector.y} ${vector.z}`);
 
             // Мітка
             resultLabel.setAttribute('position', `${vector.x + 0.5} ${vector.y + 0.5} ${vector.z + 0.5}`);
