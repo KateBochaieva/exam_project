@@ -70,13 +70,16 @@
         shaft.setAttribute("material", "color", color);
         shaft.setAttribute("position", `${position.x} ${position.y} ${position.z}`);
 
-        // Оцінка кута обертання по осі
+        // Обчислення кута за допомогою кватерніона
         const direction = new AFRAME.THREE.Vector3(vec.x, vec.y, vec.z).normalize();
         const quaternion = new AFRAME.THREE.Quaternion();
         quaternion.setFromUnitVectors(new AFRAME.THREE.Vector3(0, 1, 0), direction);
         const rotation = new AFRAME.THREE.Euler().setFromQuaternion(quaternion, 'XYZ');
-        shaft.setAttribute("rotation", `${AFRAME.THREE.Math.radToDeg(rotation.x)} ${AFRAME.THREE.Math.radToDeg(rotation.y)} ${AFRAME.THREE.Math.radToDeg(rotation.z)}`);
+        const degX = rotation.x * (180 / Math.PI);
+        const degY = rotation.y * (180 / Math.PI);
+        const degZ = rotation.z * (180 / Math.PI);
 
+        shaft.setAttribute("rotation", `${degX} ${degY} ${degZ}`);
         scene.appendChild(shaft);
 
         const label = document.createElement("a-text");
@@ -98,5 +101,3 @@
   </a-scene>
 </body>
 </html>
-
-
