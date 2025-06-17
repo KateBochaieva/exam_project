@@ -1,1 +1,626 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Координатна система - Операції з векторами</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/supermedium/superframe@master/components/environment/dist/aframe-environment-component.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            min-width: 200px;
+        }
+        
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #64b5f6;
+        }
+        
+        .vector-input {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .vector-input input {
+            width: 50px;
+            padding: 5px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            text-align: center;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result-display {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="ui-overlay">
+        <div class="controls">
+            <div class="control-group">
+                <h3>🔴 Вектор A</h3>
+                <div class="vector-input">
+                    <input type="number" id="ax" value="3" placeholder="X">
+                    <input type="number" id="ay" value="2" placeholder="Y">
+                    <input type="number" id="az" value="1" placeholder="Z">
+                </div>
+                <button class="btn btn-primary" onclick="updateVector('A')">Оновити A</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>🔵 Вектор B</h3>
+                <div class="vector-input">
+                    <input type="number" id="bx" value="1" placeholder="X">
+                    <input type="number" id="by" value="3" placeholder="Y">
+                    <input type="number" id="bz" value="2" placeholder="Z">
+                </div>
+                <button class="btn btn-primary" onclick="updateVector('B')">Оновити B</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>⚡ Операції</h3>
+                <button class="btn btn-secondary" onclick="performOperation('add')">A + B</button>
+                <button class="btn btn-secondary" onclick="performOperation('subtract')">A - B</button>
+                <button class="btn btn-success" onclick="performOperation('dot')">A · B</button>
+                <button class="btn btn-success" onclick="performOperation('cross')">A × B</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>🎮 Управління</h3>
+                <button class="btn btn-primary" onclick="resetView()">Скинути вид</button>
+                <button class="btn btn-secondary" onclick="toggleAnimation()">Анімація</button>
+            </div>
+        </div>
+        
+        <div class="result-display" id="resultDisplay" style="display: none;">
+            <strong>Результат:</strong> <span id="resultText"></span>
+        </div>
+    </div>
 
+    <div class="info-panel">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff4444;"></div>
+                <span>Вектор A (червоний)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4444ff;"></div>
+                <span>Вектор B (синій)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #44ff44;"></div>
+                <span>Результат операції</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffff44;"></div>
+                <span>Координатні осі</span>
+            </div>
+        </div>
+        <p style="margin-top: 10px; font-size: 11px; color: #ccc;">
+            Використовуйте мишу для обертання сцени, колесо для масштабування
+        </p>
+    </div>
+
+    <a-scene embedded style="height: 100vh;" background="color: #0a0a1a" vr-mode-ui="enabled: false">
+        <!-- Освітлення -->
+        <a-light type="ambient" color="#404040" intensity="0.4"></a-light>
+        <a-light type="directional" position="2 4 5" color="#ffffff" intensity="0.8"></a-light>
+        <a-light type="point" position="0 0 0" color="#ffffff" intensity="0.5"></a-light>
+
+        <!-- Координатні осі -->
+        <!-- Вісь X (червона) -->
+        <a-cylinder id="axisX" position="2.5 0 0" rotation="0 0 90" radius="0.02" height="5" color="#ff4444" opacity="0.8"></a-cylinder>
+        <a-cone position="5 0 0" rotation="0 0 -90" radius-bottom="0.1" radius-top="0" height="0.3" color="#ff4444"></a-cone>
+        <a-text value="X" position="5.5 0 0" align="center" color="#ff4444" scale="1.5 1.5 1.5"></a-text>
+
+        <!-- Вісь Y (зелена) -->
+        <a-cylinder id="axisY" position="0 2.5 0" radius="0.02" height="5" color="#44ff44" opacity="0.8"></a-cylinder>
+        <a-cone position="0 5 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#44ff44"></a-cone>
+        <a-text value="Y" position="0 5.5 0" align="center" color="#44ff44" scale="1.5 1.5 1.5"></a-text>
+
+        <!-- Вісь Z (синя) -->
+        <a-cylinder id="axisZ" position="0 0 2.5" rotation="90 0 0" radius="0.02" height="5" color="#4444ff" opacity="0.8"></a-cylinder>
+        <a-cone position="0 0 5" rotation="90 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#4444ff"></a-cone>
+        <a-text value="Z" position="0 0 5.5" align="center" color="#4444ff" scale="1.5 1.5 1.5"></a-text>
+
+        <!-- Центр координат -->
+        <a-sphere position="0 0 0" radius="0.1" color="#ffffff" opacity="0.8"></a-sphere>
+
+        <!-- Координатна сітка -->
+        <a-entity id="grid">
+            <!-- Сітка в площині XY -->
+            <a-entity id="gridXY" position="0 0 0">
+                <!-- Горизонтальні лінії -->
+                <a-cylinder position="0 1 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 2 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 3 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 4 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 -1 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 -2 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 -3 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="0 -4 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                
+                <!-- Вертикальні лінії -->
+                <a-cylinder position="1 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="2 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="3 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="4 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="-1 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="-2 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="-3 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+                <a-cylinder position="-4 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+            </a-entity>
+        </a-entity>
+
+        <!-- Вектор A -->
+        <a-entity id="vectorA">
+            <a-cone id="vectorAArrow" position="3 2 1" rotation="0 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#ff4444"></a-cone>
+            <a-cylinder id="vectorALine" position="1.5 1 0.5" rotation="0 0 0" radius="0.03" height="3.74" color="#ff4444"></a-cylinder>
+            <a-text id="vectorALabel" value="A(3,2,1)" position="3.5 2.5 1" align="center" color="#ff4444" scale="0.8 0.8 0.8"></a-text>
+        </a-entity>
+
+        <!-- Вектор B -->
+        <a-entity id="vectorB">
+            <a-cone id="vectorBArrow" position="1 3 2" rotation="0 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#4444ff"></a-cone>
+            <a-cylinder id="vectorBLine" position="0.5 1.5 1" rotation="0 0 0" radius="0.03" height="3.74" color="#4444ff"></a-cylinder>
+            <a-text id="vectorBLabel" value="B(1,3,2)" position="1.5 3.5 2" align="center" color="#4444ff" scale="0.8 0.8 0.8"></a-text>
+        </a-entity>
+
+        <!-- Результуючий вектор -->
+        <a-entity id="resultVector" visible="false">
+            <a-cone id="resultArrow" position="0 0 0" rotation="0 0 0" radius-bottom="0.12" radius-top="0" height="0.4" color="#44ff44"></a-cone>
+            <a-cylinder id="resultLine" position="0 0 0" rotation="0 0 0" radius="0.04" height="1" color="#44ff44"></a-cylinder>
+            <a-text id="resultLabel" value="" position="0 0 0" align="center" color="#44ff44" scale="0.8 0.8 0.8"></a-text>
+        </a-entity>
+
+        <!-- Камера з орбітальним управлінням -->
+        <a-entity id="cameraRig" position="0 0 0">
+            <a-camera id="camera" 
+                     position="8 6 8" 
+                     look-controls="enabled: true" 
+                     wasd-controls="enabled: false"
+                     orbit-controls="target: 0 0 0; enableDamping: true; dampingFactor: 0.1; rotateSpeed: 0.5; zoomSpeed: 0.5; minDistance: 3; maxDistance: 20; enablePan: false">
+            </a-camera>
+        </a-entity>
+
+        <!-- Курсор -->
+        <a-cursor color="#ffffff" raycaster="objects: .clickable"></a-cursor>
+    </a-scene>
+
+    <script>
+        // Глобальні змінні
+        let vectorA = { x: 3, y: 2, z: 1 };
+        let vectorB = { x: 1, y: 3, z: 2 };
+        let animationEnabled = false;
+
+        // Ініціалізація після завантаження сцени
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                updateVector('A');
+                updateVector('B');
+            }, 1000);
+        });
+
+        // Функція для оновлення векторів
+        function updateVector(vectorName) {
+            const inputs = vectorName === 'A' ? 
+                { x: 'ax', y: 'ay', z: 'az' } : 
+                { x: 'bx', y: 'by', z: 'bz' };
+            
+            const vector = {
+                x: parseFloat(document.getElementById(inputs.x).value) || 0,
+                y: parseFloat(document.getElementById(inputs.y).value) || 0,
+                z: parseFloat(document.getElementById(inputs.z).value) || 0
+            };
+
+            if (vectorName === 'A') {
+                vectorA = vector;
+                updateVectorDisplay('A', vector, '#ff4444');
+            } else {
+                vectorB = vector;
+                updateVectorDisplay('B', vector, '#4444ff');
+            }
+
+            hideResultVector();
+        }
+
+        // Функція для відображення вектора в 3D сцені
+        function updateVectorDisplay(name, vector, color) {
+            const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+            if (length === 0) return;
+
+            const entity = document.getElementById(`vector${name}`);
+            const arrow = document.getElementById(`vector${name}Arrow`);
+            const line = document.getElementById(`vector${name}Line`);
+            const label = document.getElementById(`vector${name}Label`);
+
+            // Розрахунок кута та орієнтації
+            const rotation = calculateRotationForVector(vector);
+            
+            // Позиція лінії (середина вектора)
+            line.setAttribute('position', `${vector.x/2} ${vector.y/2} ${vector.z/2}`);
+            line.setAttribute('height', length);
+            line.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+            
+            // Позиція стрілки (кінець вектора) з правильним обертанням
+            arrow.setAttribute('position', `${vector.x} ${vector.y} ${vector.z}`);
+            arrow.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+
+            // Позиція мітки
+            label.setAttribute('position', `${vector.x + 0.5} ${vector.y + 0.5} ${vector.z}`);
+            label.setAttribute('value', `${name}(${vector.x},${vector.y},${vector.z})`);
+
+            // Анімація, якщо увімкнена
+            if (animationEnabled) {
+                entity.setAttribute('animation', {
+                    property: 'scale',
+                    to: '1.1 1.1 1.1',
+                    dur: 1000,
+                    easing: 'easeInOutQuad',
+                    loop: true,
+                    dir: 'alternate'
+                });
+            } else {
+                entity.removeAttribute('animation');
+            }
+        }
+
+        // Функція для розрахунку обертання вектора (виправлена)
+        function calculateRotationForVector(vector) {
+            const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+            if (length === 0) return { x: 0, y: 0, z: 0 };
+
+            // Нормалізований вектор
+            const nx = vector.x / length;
+            const ny = vector.y / length;
+            const nz = vector.z / length;
+
+            // Розрахунок кутів для правильної орієнтації стрілки
+            const rotX = -Math.asin(ny) * (180 / Math.PI);
+            const rotY = Math.atan2(nx, nz) * (180 / Math.PI);
+            const rotZ = 0;
+
+            return { x: rotX, y: rotY, z: rotZ };
+        }
+
+        // Функція для виконання операцій над векторами
+        function performOperation(operation) {
+            let result;
+            let resultText = '';
+            let isScalar = false;
+
+            switch (operation) {
+                case 'add':
+                    result = {
+                        x: vectorA.x + vectorB.x,
+                        y: vectorA.y + vectorB.y,
+                        z: vectorA.z + vectorB.z
+                    };
+                    resultText = `A + B = (${result.x}, ${result.y}, ${result.z})`;
+                    break;
+
+                case 'subtract':
+                    result = {
+                        x: vectorA.x - vectorB.x,
+                        y: vectorA.y - vectorB.y,
+                        z: vectorA.z - vectorB.z
+                    };
+                    resultText = `A - B = (${result.x}, ${result.y}, ${result.z})`;
+                    break;
+
+                case 'dot':
+                    const dotProduct = vectorA.x * vectorB.x + vectorA.y * vectorB.y + vectorA.z * vectorB.z;
+                    resultText = `A · B = ${dotProduct}`;
+                    isScalar = true;
+                    break;
+
+                case 'cross':
+                    result = {
+                        x: vectorA.y * vectorB.z - vectorA.z * vectorB.y,
+                        y: vectorA.z * vectorB.x - vectorA.x * vectorB.z,
+                        z: vectorA.x * vectorB.y - vectorA.y * vectorB.x
+                    };
+                    resultText = `A × B = (${result.x}, ${result.y}, ${result.z})`;
+                    break;
+            }
+
+            // Відображення результату
+            showResult(resultText);
+            
+            if (!isScalar && result) {
+                showResultVector(result, operation);
+            } else {
+                hideResultVector();
+            }
+        }
+
+        // Функція для відображення результуючого вектора
+        function showResultVector(vector, operation) {
+            const resultEntity = document.getElementById('resultVector');
+            const resultArrow = document.getElementById('resultArrow');
+            const resultLine = document.getElementById('resultLine');
+            const resultLabel = document.getElementById('resultLabel');
+
+            const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+            if (length === 0) {
+                hideResultVector();
+                return;
+            }
+
+            resultEntity.setAttribute('visible', true);
+
+            // Розрахунок правильного обертання
+            const rotation = calculateRotationForVector(vector);
+            
+            // Позиція лінії (середина вектора)
+            resultLine.setAttribute('position', `${vector.x/2} ${vector.y/2} ${vector.z/2}`);
+            resultLine.setAttribute('height', length);
+            resultLine.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+            
+            // Позиція стрілки (кінець вектора)
+            resultArrow.setAttribute('position', `${vector.x} ${vector.y} ${vector.z}`);
+            resultArrow.setAttribute('rotation', `${rotation.x} ${rotation.y} ${rotation.z}`);
+
+            // Мітка
+            resultLabel.setAttribute('position', `${vector.x + 0.5} ${vector.y + 0.5} ${vector.z + 0.5}`);
+            resultLabel.setAttribute('value', `${operation === 'add' ? 'A+B' : operation === 'subtract' ? 'A-B' : 'A×B'}(${vector.x.toFixed(1)},${vector.y.toFixed(1)},${vector.z.toFixed(1)})`);
+
+            // Анімація з'явлення
+            resultEntity.setAttribute('animation', {
+                property: 'scale',
+                from: '0 0 0',
+                to: '1 1 1',
+                dur: 500,
+                easing: 'easeOutBack'
+            });
+        }
+
+        // Функція для приховування результуючого вектора
+        function hideResultVector() {
+            document.getElementById('resultVector').setAttribute('visible', false);
+        }
+
+        // Функція для відображення результату
+        function showResult(text) {
+            const resultDisplay = document.getElementById('resultDisplay');
+            const resultText = document.getElementById('resultText');
+            
+            resultText.textContent = text;
+            resultDisplay.style.display = 'block';
+            
+            // Автоматичне приховування через 5 секунд
+            setTimeout(() => {
+                resultDisplay.style.display = 'none';
+            }, 5000);
+        }
+
+        // Функція для скидання виду
+        function resetView() {
+            const camera = document.getElementById('camera');
+            camera.setAttribute('position', '8 6 8');
+            camera.setAttribute('rotation', '0 0 0');
+        }
+
+        // Функція для перемикання анімації
+        function toggleAnimation() {
+            animationEnabled = !animationEnabled;
+            updateVector('A');
+            updateVector('B');
+        }
+
+        // Додавання обробників клавітурних скорочень
+        document.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case '1':
+                    performOperation('add');
+                    break;
+                case '2':
+                    performOperation('subtract');
+                    break;
+                case '3':
+                    performOperation('dot');
+                    break;
+                case '4':
+                    performOperation('cross');
+                    break;
+                case 'r':
+                case 'R':
+                    resetView();
+                    break;
+                case 'a':
+                case 'A':
+                    toggleAnimation();
+                    break;
+            }
+        });
+
+        // Орбітальне управління камерою
+        AFRAME.registerComponent('orbit-controls', {
+            schema: {
+                target: {type: 'vec3'},
+                enableDamping: {type: 'boolean', default: true},
+                dampingFactor: {type: 'number', default: 0.1},
+                rotateSpeed: {type: 'number', default: 1.0},
+                zoomSpeed: {type: 'number', default: 1.0},
+                minDistance: {type: 'number', default: 1},
+                maxDistance: {type: 'number', default: 100},
+                enablePan: {type: 'boolean', default: true}
+            },
+            
+            init: function() {
+                this.camera = this.el.getObject3D('camera');
+                this.target = new THREE.Vector3();
+                this.target.copy(this.data.target);
+                
+                this.spherical = new THREE.Spherical();
+                this.sphericalDelta = new THREE.Spherical();
+                
+                this.scale = 1;
+                this.panOffset = new THREE.Vector3();
+                
+                this.rotateStart = new THREE.Vector2();
+                this.rotateEnd = new THREE.Vector2();
+                this.rotateDelta = new THREE.Vector2();
+                
+                this.state = 'none';
+                
+                this.bindMethods();
+                this.addEventListeners();
+            },
+            
+            bindMethods: function() {
+                this.onMouseDown = this.onMouseDown.bind(this);
+                this.onMouseMove = this.onMouseMove.bind(this);
+                this.onMouseUp = this.onMouseUp.bind(this);
+                this.onWheel = this.onWheel.bind(this);
+            },
+            
+            addEventListeners: function() {
+                this.el.sceneEl.canvas.addEventListener('mousedown', this.onMouseDown);
+                this.el.sceneEl.canvas.addEventListener('mousemove', this.onMouseMove);
+                this.el.sceneEl.canvas.addEventListener('mouseup', this.onMouseUp);
+                this.el.sceneEl.canvas.addEventListener('wheel', this.onWheel);
+            },
+            
+            onMouseDown: function(event) {
+                this.rotateStart.set(event.clientX, event.clientY);
+                this.state = 'rotating';
+            },
+            
+            onMouseMove: function(event) {
+                if (this.state === 'rotating') {
+                    this.rotateEnd.set(event.clientX, event.clientY);
+                    this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart);
+                    
+                    this.sphericalDelta.theta -= 2 * Math.PI * this.rotateDelta.x / this.el.sceneEl.canvas.clientWidth * this.data.rotateSpeed;
+                    this.sphericalDelta.phi -= 2 * Math.PI * this.rotateDelta.y / this.el.sceneEl.canvas.clientHeight * this.data.rotateSpeed;
+                    
+                    this.rotateStart.copy(this.rotateEnd);
+                }
+            },
+            
+            onMouseUp: function() {
+                this.state = 'none';
+            },
+            
+            onWheel: function(event) {
+                if (this.data.zoomSpeed > 0) {
+                    this.scale *= Math.pow(0.95, this.data.zoomSpeed * Math.sign(event.deltaY));
+                    this.scale = Math.max(this.data.minDistance / this.getDistance(), Math.min(this.data.maxDistance / this.getDistance(), this.scale));
+                }
+            },
+            
+            getDistance: function() {
+                return this.camera.position.distanceTo(this.target);
+            },
+            
+            tick: function() {
+                const position = this.camera.position;
+                
+                const offset = new THREE.Vector3();
+                offset.copy(position).sub(this.target);
+                
+                this.spherical.setFromVector3(offset);
+                
+                this.spherical.theta += this.sphericalDelta.theta;
+                this.spherical.phi += this.sphericalDelta.phi;
+                
+                this.spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, this.spherical.phi));
+                
+                this.spherical.radius *= this.scale;
+                this.spherical
