@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Координатна система - Операції з векторами</title>
+    <title>3D Векторна система</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/supermedium/superframe@master/components/environment/dist/aframe-environment-component.min.js"></script>
     <style>
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
         }
         
         .ui-overlay {
@@ -128,19 +128,6 @@
             border-radius: 50%;
             margin-right: 10px;
         }
-
-        .keyboard-shortcuts {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            max-width: 250px;
-            backdrop-filter: blur(10px);
-            font-size: 11px;
-        }
     </style>
 </head>
 <body>
@@ -170,15 +157,9 @@
                 <h3>⚡ Операції</h3>
                 <button class="btn btn-secondary" onclick="performOperation('add')">A + B</button>
                 <button class="btn btn-secondary" onclick="performOperation('subtract')">A - B</button>
+                <button class="btn btn-secondary" onclick="performOperation('multiply')">A * B</button>
                 <button class="btn btn-success" onclick="performOperation('dot')">A · B</button>
                 <button class="btn btn-success" onclick="performOperation('cross')">A × B</button>
-            </div>
-            
-            <div class="control-group">
-                <h3>🎮 Управління</h3>
-                <button class="btn btn-primary" onclick="resetView()">Скинути вид</button>
-                <button class="btn btn-secondary" onclick="toggleAnimation()" id="animBtn">Анімація</button>
-                <button class="btn btn-success" onclick="toggleGrid()">Сітка</button>
             </div>
         </div>
         
@@ -201,25 +182,7 @@
                 <div class="legend-color" style="background: #44ff44;"></div>
                 <span>Результат операції</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ffff44;"></div>
-                <span>Координатні осі</span>
-            </div>
         </div>
-        <p style="margin-top: 10px; font-size: 11px; color: #ccc;">
-            Використовуйте мишу для обертання сцени, колесо для масштабування
-        </p>
-    </div>
-
-    <div class="keyboard-shortcuts">
-        <h4 style="margin: 0 0 10px 0; color: #64b5f6;">Клавіатурні скорочення:</h4>
-        <div>1 - A + B</div>
-        <div>2 - A - B</div>
-        <div>3 - A · B</div>
-        <div>4 - A × B</div>
-        <div>R - Скинути вид</div>
-        <div>G - Сітка</div>
-        <div>Пробіл - Анімація</div>
     </div>
 
     <a-scene embedded style="height: 100vh;" background="color: #0a0a1a" vr-mode-ui="enabled: false">
@@ -230,46 +193,31 @@
 
         <!-- Координатні осі -->
         <!-- Вісь X (червона) -->
-        <a-cylinder id="axisX" position="2.5 0 0" rotation="0 0 90" radius="0.02" height="5" color="#ff4444" opacity="0.8"></a-cylinder>
-        <a-cone position="5 0 0" rotation="0 0 -90" radius-bottom="0.1" radius-top="0" height="0.3" color="#ff4444"></a-cone>
-        <a-text value="X" position="5.5 0 0" align="center" color="#ff4444" scale="1.5 1.5 1.5"></a-text>
+        <a-cylinder id="axisX" position="2.5 0 0" rotation="0 0 90" radius="0.02" height="5" color="#ff3333" opacity="0.8"></a-cylinder>
+        <a-cone position="5 0 0" rotation="0 0 -90" radius-bottom="0.1" radius-top="0" height="0.3" color="#ff3333"></a-cone>
+        <a-text value="X" position="5.5 0 0" align="center" color="#ff3333" scale="1.5 1.5 1.5"></a-text>
 
         <!-- Вісь Y (зелена) -->
-        <a-cylinder id="axisY" position="0 2.5 0" radius="0.02" height="5" color="#44ff44" opacity="0.8"></a-cylinder>
-        <a-cone position="0 5 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#44ff44"></a-cone>
-        <a-text value="Y" position="0 5.5 0" align="center" color="#44ff44" scale="1.5 1.5 1.5"></a-text>
+        <a-cylinder id="axisY" position="0 2.5 0" radius="0.02" height="5" color="#33ff33" opacity="0.8"></a-cylinder>
+        <a-cone position="0 5 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#33ff33"></a-cone>
+        <a-text value="Y" position="0 5.5 0" align="center" color="#33ff33" scale="1.5 1.5 1.5"></a-text>
 
         <!-- Вісь Z (синя) -->
-        <a-cylinder id="axisZ" position="0 0 2.5" rotation="90 0 0" radius="0.02" height="5" color="#4444ff" opacity="0.8"></a-cylinder>
-        <a-cone position="0 0 5" rotation="90 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#4444ff"></a-cone>
-        <a-text value="Z" position="0 0 5.5" align="center" color="#4444ff" scale="1.5 1.5 1.5"></a-text>
+        <a-cylinder id="axisZ" position="0 0 2.5" rotation="90 0 0" radius="0.02" height="5" color="#3333ff" opacity="0.8"></a-cylinder>
+        <a-cone position="0 0 5" rotation="90 0 0" radius-bottom="0.1" radius-top="0" height="0.3" color="#3333ff"></a-cone>
+        <a-text value="Z" position="0 0 5.5" align="center" color="#3333ff" scale="1.5 1.5 1.5"></a-text>
 
         <!-- Центр координат -->
         <a-sphere position="0 0 0" radius="0.1" color="#ffffff" opacity="0.8"></a-sphere>
 
         <!-- Координатна сітка -->
-        <a-entity id="grid">
+        <a-entity id="grid" position="0 0 0">
             <!-- Сітка в площині XY -->
-            <a-entity id="gridXY" position="0 0 0">
-                <!-- Горизонтальні лінії -->
-                <a-cylinder position="0 1 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 2 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 3 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 4 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 -1 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 -2 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 -3 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="0 -4 0" rotation="0 0 90" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                
-                <!-- Вертикальні лінії -->
-                <a-cylinder position="1 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="2 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="3 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="4 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="-1 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="-2 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="-3 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
-                <a-cylinder position="-4 0 0" rotation="0 0 0" radius="0.005" height="10" color="#333333" opacity="0.3"></a-cylinder>
+            <a-entity position="0 0 0">
+                <!-- Горизонтальні лінії (X) -->
+                <a-entity position="0 0 0" rotation="0 0 0">
+                    <a-plane position="0 0 0" rotation="-90 0 0" width="10" height="10" color="#222244" opacity="0.3" repeat="10 10"></a-plane>
+                </a-entity>
             </a-entity>
         </a-entity>
 
@@ -294,14 +242,13 @@
             <a-text id="resultLabel" value="" position="0 0 0" align="center" color="#44ff44" scale="0.8 0.8 0.8"></a-text>
         </a-entity>
 
-        <!-- Камера з простим управлінням -->
-        <a-entity id="cameraRig" position="0 0 0">
-            <a-camera id="camera" 
-                     position="8 6 8" 
-                     look-controls="enabled: true; pointerLockEnabled: false" 
-                     wasd-controls="enabled: false"
-                     orbit-controls="target: 0 0 0; enableDamping: true; rotateSpeed: 0.5; zoomSpeed: 0.8; minDistance: 3; maxDistance: 20">
-            </a-camera>
+        <!-- Камера -->
+        <a-entity camera look-controls wasd-controls="enabled: false" position="8 6 8">
+            <a-entity cursor="fuse: true; fuseTimeout: 500"
+                      position="0 0 -5"
+                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                      material="color: white; shader: flat">
+            </a-entity>
         </a-entity>
     </a-scene>
 
@@ -309,8 +256,6 @@
         // Глобальні змінні
         let vectorA = { x: 3, y: 2, z: 1 };
         let vectorB = { x: 1, y: 3, z: 2 };
-        let animationEnabled = false;
-        let gridVisible = true;
 
         // Ініціалізація після завантаження сцени
         document.addEventListener('DOMContentLoaded', function() {
@@ -368,20 +313,6 @@
             // Позиція мітки
             label.setAttribute('position', `${vector.x + 0.5} ${vector.y + 0.5} ${vector.z}`);
             label.setAttribute('value', `${name}(${vector.x.toFixed(1)},${vector.y.toFixed(1)},${vector.z.toFixed(1)})`);
-
-            // Анімація, якщо увімкнена
-            if (animationEnabled) {
-                entity.setAttribute('animation', {
-                    property: 'scale',
-                    to: '1.1 1.1 1.1',
-                    dur: 1000,
-                    easing: 'easeInOutQuad',
-                    loop: true,
-                    dir: 'alternate'
-                });
-            } else {
-                entity.removeAttribute('animation');
-            }
         }
 
         // Функція для розрахунку обертання вектора
@@ -425,6 +356,15 @@
                         z: vectorA.z - vectorB.z
                     };
                     resultText = `A - B = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})`;
+                    break;
+
+                case 'multiply':
+                    result = {
+                        x: vectorA.x * vectorB.x,
+                        y: vectorA.y * vectorB.y,
+                        z: vectorA.z * vectorB.z
+                    };
+                    resultText = `A * B = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})`;
                     break;
 
                 case 'dot':
@@ -482,7 +422,7 @@
 
             // Мітка
             resultLabel.setAttribute('position', `${vector.x + 0.5} ${vector.y + 0.5} ${vector.z + 0.5}`);
-            const operationSymbol = operation === 'add' ? '+' : operation === 'subtract' ? '−' : '×';
+            const operationSymbol = operation === 'add' ? '+' : operation === 'subtract' ? '−' : operation === 'multiply' ? '*' : '×';
             resultLabel.setAttribute('value', `A${operationSymbol}B(${vector.x.toFixed(1)},${vector.y.toFixed(1)},${vector.z.toFixed(1)})`);
 
             // Анімація з'явлення
@@ -514,68 +454,11 @@
             }, 7000);
         }
 
-        // Функція для скидання виду
-        function resetView() {
-            const camera = document.getElementById('camera');
-            camera.setAttribute('position', '8 6 8');
-            camera.setAttribute('rotation', '0 0 0');
-        }
-
-        // Функція для перемикання анімації
-        function toggleAnimation() {
-            animationEnabled = !animationEnabled;
-            const btn = document.getElementById('animBtn');
-            btn.textContent = animationEnabled ? 'Стоп анімація' : 'Анімація';
+        // Ініціалізація сцени
+        window.onload = function() {
             updateVector('A');
             updateVector('B');
-        }
-
-        // Функція для перемикання сітки
-        function toggleGrid() {
-            gridVisible = !gridVisible;
-            const grid = document.getElementById('grid');
-            grid.setAttribute('visible', gridVisible);
-        }
-
-        // Додавання обробників клавітурних скорочень
-        document.addEventListener('keydown', function(event) {
-            switch(event.key) {
-                case '1':
-                    performOperation('add');
-                    break;
-                case '2':
-                    performOperation('subtract');
-                    break;
-                case '3':
-                    performOperation('dot');
-                    break;
-                case '4':
-                    performOperation('cross');
-                    break;
-                case 'r':
-                case 'R':
-                    resetView();
-                    break;
-                case ' ':
-                    toggleAnimation();
-                    break;
-                case 'g':
-                case 'G':
-                    toggleGrid();
-                    break;
-            }
-        });
-
-        // Додаткові функції для покращення користувацького досвіду
-        function init() {
-            // Ініціалізація сцени
-            updateVector('A');
-            updateVector('B');
-            resetView();
-        }
-
-        // Запуск ініціалізації після повного завантаження сторінки
-        window.onload = init;
+        };
     </script>
 </body>
 </html>
